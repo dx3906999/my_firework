@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>烟花，绽放！</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="index.css">
+    </head>
+    <body>
+        <h1 id="yanhuah1">烟花，绽放！</h1>
+        <p id="zuozhe">作者：dx3qOb</p>
+        <canvas id="main_canvas"></canvas>
+        <script src="jquery-3.7.1.min.js"></script>
+        
+        
+        <script type="text/javascript">
+            $(function() {
+              $(window).resize(resizeCanvas);
+              resizeCanvas();
+            });
+       
+            function resizeCanvas() {
+              $("#main_canvas").attr("width", $(window).get(0).innerWidth);
+              $("#main_canvas").attr("height", $(window).get(0).innerHeight);
+            };
+          </script>
+        <script src="index.js" async defer></script>
+        
+        <p id="ref">参考资料及致谢：
+            <br>
+            <a href="https://cloud.tencent.com/developer/article/2398947">制作一个绚丽的烟花效果</a>
+            <br>
+            <a href="https://www.hangge.com/blog/cache/detail_1871.html#google_vignette">HTML5 - 让Canvas大小自适应</a>
+        </p>
+    </body>
+</html>

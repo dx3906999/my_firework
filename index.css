@@ -1,0 +1,23 @@
+html{
+    background-color: rgb(0, 0, 0);
+}
+
+#yanhuah1{
+    text-align: center;
+    color: rgb(200, 75, 192);
+}
+
+
+p{
+    text-align: center;
+    color: burlywood;
+}
+
+a{
+    text-align: center;
+    color: burlywood;
+}
+
+#main_canvas{
+    background-color: rgb(0, 0, 0);
+}
