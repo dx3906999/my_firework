@@ -23,11 +23,6 @@ function main() {
     buffer_canvas.height=my_canvas.height;
 
 
-    my_ctx.beginPath();
-    my_ctx.arc(95,50,40,0,2*Math.PI);
-    my_ctx.fillStyle='#ffffff'
-    my_ctx.fill();
-
     
     my_canvas.addEventListener('click', (event) => {
         const x = event.offsetX;
