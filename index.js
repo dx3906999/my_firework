@@ -7,6 +7,7 @@ const v_init=20
 const v_scale=0.3*v_init;
 var fireworks=[];
 var fireworks_particles=[];
+var fireworks_type;
 
 $(function(){main()})
 
@@ -22,12 +23,12 @@ function main() {
     buffer_canvas.width=my_canvas.width;
     buffer_canvas.height=my_canvas.height;
 
-
     
     my_canvas.addEventListener('click', (event) => {
         const x = event.offsetX;
-        const y = event.offsetY;
-        var fp_v=(-(Math.random()-0.5)*2*v_scale-v_init)*2
+        //const y = event.offsetY;
+        var fp_v=(-(Math.random()-0.5)*2*v_scale-v_init)*2;
+        
         fireworks_particles.push(new Particle(x,0.8*my_canvas.height,0,fp_v,`hsl(${Math.random()*360},100%,50%)`,2.5,1));
         //fireworks.push(new Firework(x,y,25,2));
       });
@@ -36,7 +37,7 @@ function main() {
 }
 
 class Particle{
-    constructor(x,y,vx,vy,color,r,opacity){
+    constructor(x,y,vx,vy,color,r,opacity,opacity_decay=1){
         this.x=x;
         this.y=y;
         this.vx=vx;
@@ -44,6 +45,7 @@ class Particle{
         this.color=color;
         this.r=r;
         this.opacity=opacity;
+        this.opacity_decay=opacity_decay;
     }
 
     update(){
@@ -51,7 +53,7 @@ class Particle{
         this.y+=interval*this.vy;
         this.vx-=f*this.vx;
         this.vy+=interval*g-f*this.vy;
-        this.opacity>0 ? (this.opacity-=0.01) : this.opacity=0;
+        this.opacity>0 ? (this.opacity-=0.01*this.opacity_decay) : this.opacity=0;
         //this.opacity-=0.01;
     }
 
@@ -68,12 +70,12 @@ class Particle{
 }
 
 class Firework{
-    constructor(x,y,particle_num,particle_r){
+    constructor(x,y,particle_num,particle_r,pre_color){
         this.x=x;
         this.y=y;
         this.particles=[];
         for (let i = 0; i < particle_num; i++) {
-            var color=`hsl(${Math.random()*360},100%,50%)`;
+            var color=pre_color||`hsl(${Math.random()*360},100%,50%)`;
             var theta=2*Math.PI*(Math.random()-0.5)*2;
             var v_fluctuation=(Math.random()-0.5)*2*v_scale;
             var vx=Math.cos(theta)*(v_init+v_fluctuation);
@@ -91,6 +93,80 @@ class Firework{
     }
 }
 
+class Firework_double_layers{
+    constructor(x,y,particle_num,particle_r,pre_color){
+        this.x=x;
+        this.y=y;
+        this.particles=[];
+        for (let i = 0; i < particle_num*2; i++) {
+            var color=pre_color||`hsl(${Math.random()*360},100%,50%)`;
+            var theta=2*Math.PI*(Math.random()-0.5)*2;
+            var v_fluctuation=(Math.random()-0.5)*2*v_scale;
+            var vx=Math.cos(theta)*(v_init+v_fluctuation)*(i%3!=0?1:0.6);
+            var vy=Math.sin(theta)*(v_init+v_fluctuation)*(i%3!=0?1:0.6);
+            this.particles.push(new Particle(x,y,vx,vy,color,particle_r,1));
+        }
+    }
+
+    update(){
+        this.particles.forEach(particle=>particle.update());
+    }
+
+    draw(ctx){
+        this.particles.forEach(particle=>particle.draw(ctx));
+    }
+}
+
+
+
+class Firework_spark{
+    constructor(x,y,particle_num,particle_r,v_random_scale=1){
+        this.x=x;
+        this.y=y;
+        this.particles=[];
+        this.little_fireworks=[];
+        this.particle_r=particle_r;
+        for (let i = 0; i < particle_num; i++) {
+            var color=`#F6F586`;
+            var theta=2*Math.PI*(Math.random()-0.5)*2;
+            var v_fluctuation=(Math.random()-0.5)*2*v_scale*v_random_scale;
+            var vx=Math.cos(theta)*(v_init+v_fluctuation);
+            var vy=Math.sin(theta)*(v_init+v_fluctuation);
+            this.particles.push(new Particle(x,y,vx,vy,color,particle_r,1));
+            //this.little_fireworks.push(new Firework(x,y,5,particle_r*0.3,color));
+        }
+    }
+
+    update(){
+        if (this.particles[0].opacity>=0.4&&this.particles[0].opacity_decay===1) {
+            this.particles.forEach(particle=>particle.update());
+        }
+        else if (this.particles[0].opacity<0.4&&this.particles[0].opacity_decay===1) {
+            this.particles.forEach((particle,index)=>{
+                particle.opacity_decay=15;
+                particle.opacity=1;
+                particle.update();
+                this.little_fireworks.push(new Firework(particle.x,particle.y,5,this.particle_r*0.5,`#F6F586`));
+                this.little_fireworks[index].update();
+            });
+        }
+        else{
+            this.particles.forEach(particle=>particle.update());
+            this.little_fireworks.forEach(little_firework=>little_firework.update());
+        
+        }
+        
+    }
+
+    draw(ctx){
+        this.particles.forEach(particle=>particle.draw(ctx));
+        if (this.particles[0].opacity_decay>1) {
+            this.little_fireworks.forEach(little_firework=>little_firework.draw(ctx));
+        }
+    }
+}
+
+
 function animate() {
     my_ctx.fillStyle='rgb(0,0,0)';
     my_ctx.globalAlpha=0.2
@@ -101,7 +177,23 @@ function animate() {
 
     fireworks_particles.forEach((fireworks_particle,index) => {
         if (fireworks_particle.vy>=0) {
-            fireworks.push(new Firework(fireworks_particle.x,fireworks_particle.y,25,2));
+            fireworks_type=Math.floor(Math.random()*1000)%3;
+            //console.log(fireworks_type);
+            switch (fireworks_type) {
+                case 0:
+                    fireworks.push(new Firework_spark(fireworks_particle.x,fireworks_particle.y,50,2,2));
+                    break;
+                case 1:
+                    fireworks.push(new Firework_double_layers(fireworks_particle.x,fireworks_particle.y,50,2));
+                    fireworks.push(new Firework_spark(fireworks_particle.x,fireworks_particle.y,50,2,2));
+                    break;
+                case 2:
+                    fireworks.push(new Firework_double_layers(fireworks_particle.x,fireworks_particle.y,50,2));
+                    break;
+                default:
+                    break;
+            }
+            //fireworks.push(new Firework_spark(fireworks_particle.x,fireworks_particle.y,50,2,2));
             delete fireworks_particle;
             fireworks_particles.splice(index,1);
         } else {
@@ -124,4 +216,5 @@ function animate() {
   
     requestAnimationFrame(animate);
 }
+
 
